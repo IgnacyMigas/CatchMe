@@ -1,0 +1,2 @@
+# CatchMe
+Try catch wrapper
