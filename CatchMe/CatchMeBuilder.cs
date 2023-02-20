@@ -1,69 +1,85 @@
-﻿using CatchMe.Abstraction;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using CatchMe.Abstraction;
 
-namespace CatchMe
+namespace CatchMe;
+
+public class CatchMeBuilder : ICatchMeBuilder
 {
-    public class CatchMeBuilder : ICatchMeBuilder
+    private static readonly Action DefaultAction = () => { };
+    private readonly Dictionary<Type, Action> _exceptions = new();
+    private Action _finallyAction = DefaultAction;
+
+    public CatchMeBuilder(Type type, Action action)
     {
-        private static readonly Action DefaultAction = () => { };
-        private Dictionary<Type, Action> _exceptions = new Dictionary<Type, Action>();
-        private Action _finallyAction = DefaultAction;
+        _exceptions.Add(type, action);
+    }
 
-        public CatchMeBuilder(Type type, Action action)
+    public ICatchMeBuilder Or<T>() where T : Exception
+    {
+        return Or<T>(DefaultAction);
+    }
+
+    public ICatchMeBuilder Or<T>(Action action) where T : Exception
+    {
+        return Or(typeof(T), action);
+    }
+
+    public ICatchMeBuilder Or(Type type)
+    {
+        return Or(type, DefaultAction);
+    }
+
+    public ICatchMeBuilder Finally(Action action)
+    {
+        _finallyAction = action;
+        return this;
+    }
+
+    public ICatchMeBuilder Or(Type type, Action action)
+    {
+        if (!typeof(Exception).IsAssignableFrom(type))
         {
-            _exceptions.Add(type, action);
+            throw new ArgumentException("Type must inherit from Exception");
         }
 
-        public ICatchMeBuilder Or<T>() where T : Exception
-        {
-            return Or<T>(DefaultAction);
-        }
+        _exceptions[type] = action;
+        return this;
+    }
 
-        public ICatchMeBuilder Or<T>(Action action) where T : Exception
-        {
-            return Or(typeof(T), action);
-        }
+    public T Execute<T>(Func<T> func)
+    {
+        T result = default;
+        ExecuteInternal(() => result = func());
+        return result;
+    }
 
-        public ICatchMeBuilder Or(Type type)
-        {
-            return Or(type, DefaultAction);
-        }
+    public void Execute(Action action)
+    {
+        ExecuteInternal(action);
+    }
 
-        public ICatchMeBuilder Finally(Action action)
+    private void ExecuteInternal(Action action)
+    {
+        try
         {
-            _finallyAction = action;
-            return this;
+            action();
         }
-
-        public ICatchMeBuilder Or(Type type, Action action)
+        catch (Exception e)
         {
-            if (!typeof(Exception).IsAssignableFrom(type))
+            var exceptionType = e.GetType();
+            var exceptionKey = _exceptions.Keys.FirstOrDefault(p => p.IsAssignableFrom(exceptionType));
+            if (exceptionKey == null)
             {
-                throw new ArgumentException("Type must inherit from Exception");
+                throw;
             }
-            _exceptions[type] = action;
-            return this;
-        }
 
-        public void Execute(Action action)
+            _exceptions[exceptionKey]();
+        }
+        finally
         {
-            try
-            {
-                action();
-            }
-            catch (Exception e)
-            {
-                var exceptionType = e.GetType();
-                var exceptionKey = _exceptions.Keys.FirstOrDefault(p => p == exceptionType || exceptionType.IsSubclassOf(p));
-                if (exceptionKey == null)
-                {
-                    throw;
-                }
-                _exceptions[exceptionKey]();
-            }
-            finally
-            {
-                _finallyAction();
-            }
+            _finallyAction();
         }
     }
 }

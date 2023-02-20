@@ -1,10 +1,11 @@
-﻿namespace CatchMe.Abstraction
+﻿using System;
+
+namespace CatchMe.Abstraction;
+
+public interface ICatchMe
 {
-    public interface ICatchMe
-    {
-        ICatchMeBuilder Handle(Type type);
-        ICatchMeBuilder Handle(Type type, Action action);
-        ICatchMeBuilder Handle<T>();
-        ICatchMeBuilder Handle<T>(Action action);
-    }
+    ICatchMeBuilder Handle(Type type);
+    ICatchMeBuilder Handle(Type type, Action action);
+    ICatchMeBuilder Handle<T>();
+    ICatchMeBuilder Handle<T>(Action action);
 }

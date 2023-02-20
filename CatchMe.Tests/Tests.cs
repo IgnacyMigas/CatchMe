@@ -1,58 +1,93 @@
 using NUnit.Framework;
 
-namespace CatchMe.Tests
+namespace CatchMe.Tests;
+
+[TestFixture]
+public class Tests
 {
-    [TestFixture]
-    public class Tests
+    [Test]
+    public void ShouldCatchExactException()
     {
-        [Test]
-        public void ShouldCatchBaseWhenFirst()
-        {
-            //GIVEN
-            var isExecuted = false;
-            var testClass = CatchMe.Handle<BaseException>(() => isExecuted = true).Or<DerivedException>();
+        var isExecuted = false;
+        var testClass = CatchMe.Handle<SealedException>(() => isExecuted = true);
 
-            //WHEN
-            testClass.Execute(() => throw new BaseException());
+        //WHEN
+        testClass.Execute(() => throw new SealedException());
 
-            //THEN
-            Assert.IsTrue(isExecuted);
-        }
+        //THEN
+        Assert.That(isExecuted, Is.True);
+    }
 
-        [Test]
-        public void ShouldCatchDerivedWhenFirst()
-        {
-            //GIVEN
-            var isExecuted = false;
-            var testClass = CatchMe.Handle<DerivedException>(() => isExecuted = true).Or<BaseException>();
+    [Test]
+    public void ShouldCatchDerivedException()
+    {
+        var isExecuted = false;
+        var testClass = CatchMe.Handle<BaseException>(() => isExecuted = true);
 
-            //WHEN
-            testClass.Execute(() => throw new DerivedException());
+        //WHEN
+        testClass.Execute(() => throw new DerivedException());
 
-            //THEN
-            Assert.IsTrue(isExecuted);
-        }
+        //THEN
+        Assert.That(isExecuted, Is.True);
+    }
 
-        [Test]
-        public void ShouldCatchDerivedOnBaseWhenFirst()
-        {
-            //GIVEN
-            var isExecuted = false;
-            var testClass = CatchMe.Handle<BaseException>(() => isExecuted = true).Or<DerivedException>();
+    [Test]
+    public void ShouldCatchBaseWhenFirst()
+    {
+        //GIVEN
+        var isExecuted = false;
+        var testClass = CatchMe.Handle<BaseException>(() => isExecuted = true).Or<DerivedException>();
 
-            //WHEN
-            testClass.Execute(() => throw new DerivedException());
+        //WHEN
+        testClass.Execute(() => throw new BaseException());
 
-            //THEN
-            Assert.IsTrue(isExecuted);
-        }
+        //THEN
+        Assert.That(isExecuted, Is.True);
+    }
 
-        [Test]
-        public void ShoudThrowWhenNotInheritFromException()
-        {
-            //WHEN-THEN
-            Assert.Throws<ArgumentException>(() => CatchMe.Handle(typeof(int)));
-            Assert.Throws<ArgumentException>(() => CatchMe.Handle<Exception>().Or(typeof(int)));
-        }
+    [Test]
+    public void ShouldCatchDerivedWhenFirst()
+    {
+        //GIVEN
+        var isExecuted = false;
+        var testClass = CatchMe.Handle<DerivedException>(() => isExecuted = true).Or<BaseException>();
+
+        //WHEN
+        testClass.Execute(() => throw new DerivedException());
+
+        //THEN
+        Assert.That(isExecuted, Is.True);
+    }
+
+    [Test]
+    public void ShouldCatchDerivedOnBaseWhenFirst()
+    {
+        //GIVEN
+        var isExecuted = false;
+        var testClass = CatchMe.Handle<BaseException>(() => isExecuted = true).Or<DerivedException>();
+
+        //WHEN
+        testClass.Execute(() => throw new DerivedException());
+
+        //THEN
+        Assert.That(isExecuted, Is.True);
+    }
+
+    [Test]
+    public void ShouldThrowWhenNotCoveredException()
+    {
+        var isExecuted = false;
+        var testClass = CatchMe.Handle<BaseException>(() => isExecuted = true);
+
+        //WHEN-THEN
+        Assert.Throws<SealedException>(() => testClass.Execute(() => throw new SealedException()));
+    }
+
+    [Test]
+    public void ShouldThrowWhenNotInheritFromException()
+    {
+        //WHEN-THEN
+        Assert.Throws<ArgumentException>(() => CatchMe.Handle(typeof(int)));
+        Assert.Throws<ArgumentException>(() => CatchMe.Handle<Exception>().Or(typeof(int)));
     }
 }
