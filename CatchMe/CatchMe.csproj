@@ -1,12 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	<LangVersion>latest</LangVersion>
-	<TargetFrameworks>net48;net6.0;net7.0;netstandard2.0;netstandard2.1</TargetFrameworks>
-  </PropertyGroup>
+	<PropertyGroup>
+		<LangVersion>latest</LangVersion>
+		<TargetFrameworks>net48;net6.0;net7.0;netstandard2.0;netstandard2.1</TargetFrameworks>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\CatchMe.Abstraction\CatchMe.Abstraction.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<PackageId>CatchMe</PackageId>
+		<Product>CatchMe</Product>
+		<Authors>Ignacy Migas</Authors>
+		<RepositoryUrl>https://github.com/IgnacyMigas/CatchMe</RepositoryUrl>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Description>Try catch wrapper. You can setup CatchMe what to handle and what to do and use it in every method.</Description>
+	</PropertyGroup>
 
 </Project>

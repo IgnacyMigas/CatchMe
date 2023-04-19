@@ -1,35 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using CatchMe.Abstraction;
 
 namespace CatchMe;
 
 public class CatchMeBuilder : ICatchMeBuilder
 {
-    private static readonly Action DefaultAction = () => { };
-    private readonly Dictionary<Type, Action> _exceptions = new();
-    private Action _finallyAction = DefaultAction;
+    private static Action<Exception> DefaultAction => _ => { };
+    private readonly Dictionary<Type, Action<Exception>> _exceptions = new();
+    private Action _finallyAction = () => { };
 
-    public CatchMeBuilder(Type type, Action action)
+    public CatchMeBuilder(Type type, Action<Exception> action)
     {
         _exceptions.Add(type, action);
     }
 
-    public ICatchMeBuilder Or<T>() where T : Exception
-    {
-        return Or<T>(DefaultAction);
-    }
+    public ICatchMeBuilder Or<T>() where T : Exception => Or<T>(DefaultAction);
 
-    public ICatchMeBuilder Or<T>(Action action) where T : Exception
-    {
-        return Or(typeof(T), action);
-    }
+    public ICatchMeBuilder Or<T>(Action<Exception> action) where T : Exception => Or(typeof(T), action);
 
-    public ICatchMeBuilder Or(Type type)
-    {
-        return Or(type, DefaultAction);
-    }
+    public ICatchMeBuilder Or(Type type) => Or(type, DefaultAction);
 
     public ICatchMeBuilder Finally(Action action)
     {
@@ -37,11 +26,11 @@ public class CatchMeBuilder : ICatchMeBuilder
         return this;
     }
 
-    public ICatchMeBuilder Or(Type type, Action action)
+    public ICatchMeBuilder Or(Type type, Action<Exception> action)
     {
         if (!typeof(Exception).IsAssignableFrom(type))
         {
-            throw new ArgumentException("Type must inherit from Exception");
+            throw new ArgumentException("Type must inherit from Exception", nameof(type));
         }
 
         _exceptions[type] = action;
@@ -50,15 +39,12 @@ public class CatchMeBuilder : ICatchMeBuilder
 
     public T Execute<T>(Func<T> func)
     {
-        T result = default;
+        T result = default!;
         ExecuteInternal(() => result = func());
         return result;
     }
 
-    public void Execute(Action action)
-    {
-        ExecuteInternal(action);
-    }
+    public void Execute(Action action) => ExecuteInternal(action);
 
     private void ExecuteInternal(Action action)
     {
@@ -66,16 +52,9 @@ public class CatchMeBuilder : ICatchMeBuilder
         {
             action();
         }
-        catch (Exception e)
+        catch (Exception e) when (_exceptions.TryGetValue(e.GetType(), out var catchAction))
         {
-            var exceptionType = e.GetType();
-            var exceptionKey = _exceptions.Keys.FirstOrDefault(p => p.IsAssignableFrom(exceptionType));
-            if (exceptionKey == null)
-            {
-                throw;
-            }
-
-            _exceptions[exceptionKey]();
+            catchAction(e);
         }
         finally
         {

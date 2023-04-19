@@ -9,7 +9,7 @@ public class Tests
     public void ShouldCatchExactException()
     {
         var isExecuted = false;
-        var testClass = CatchMe.Handle<SealedException>(() => isExecuted = true);
+        var testClass = CatchMe.Handle<SealedException>(e => isExecuted = true);
 
         //WHEN
         testClass.Execute(() => throw new SealedException());
@@ -22,7 +22,7 @@ public class Tests
     public void ShouldCatchDerivedException()
     {
         var isExecuted = false;
-        var testClass = CatchMe.Handle<BaseException>(() => isExecuted = true);
+        var testClass = CatchMe.Handle<BaseException>(e => isExecuted = true);
 
         //WHEN
         testClass.Execute(() => throw new DerivedException());
@@ -36,7 +36,7 @@ public class Tests
     {
         //GIVEN
         var isExecuted = false;
-        var testClass = CatchMe.Handle<BaseException>(() => isExecuted = true).Or<DerivedException>();
+        var testClass = CatchMe.Handle<BaseException>(e => isExecuted = true).Or<DerivedException>();
 
         //WHEN
         testClass.Execute(() => throw new BaseException());
@@ -50,7 +50,7 @@ public class Tests
     {
         //GIVEN
         var isExecuted = false;
-        var testClass = CatchMe.Handle<DerivedException>(() => isExecuted = true).Or<BaseException>();
+        var testClass = CatchMe.Handle<DerivedException>(e => isExecuted = true).Or<BaseException>();
 
         //WHEN
         testClass.Execute(() => throw new DerivedException());
@@ -64,7 +64,7 @@ public class Tests
     {
         //GIVEN
         var isExecuted = false;
-        var testClass = CatchMe.Handle<BaseException>(() => isExecuted = true).Or<DerivedException>();
+        var testClass = CatchMe.Handle<BaseException>(e => isExecuted = true).Or<DerivedException>();
 
         //WHEN
         testClass.Execute(() => throw new DerivedException());
@@ -77,7 +77,7 @@ public class Tests
     public void ShouldThrowWhenNotCoveredException()
     {
         var isExecuted = false;
-        var testClass = CatchMe.Handle<BaseException>(() => isExecuted = true);
+        var testClass = CatchMe.Handle<BaseException>(e => isExecuted = true);
 
         //WHEN-THEN
         Assert.Throws<SealedException>(() => testClass.Execute(() => throw new SealedException()));
