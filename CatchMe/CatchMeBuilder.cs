@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CatchMe;
 
@@ -52,9 +53,15 @@ public class CatchMeBuilder : ICatchMeBuilder
         {
             action();
         }
-        catch (Exception e) when (_exceptions.TryGetValue(e.GetType(), out var catchAction))
+        catch (Exception e)
         {
-            catchAction(e);
+            var key = _exceptions.Keys.FirstOrDefault(x => x.IsAssignableFrom(e.GetType()));
+            if (key == null)
+            {
+                throw;
+            }
+
+            _exceptions[key](e);
         }
         finally
         {
